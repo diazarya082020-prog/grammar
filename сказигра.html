@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Китайский язык: Типы сказуемого — интерактивная игра</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    color: #e8e8e8;
+  }
+
+  .game-container {
+    max-width: 900px;
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    padding: 30px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 1.6em;
+    margin-bottom: 8px;
+    background: linear-gradient(90deg, #e94560, #f5a623, #e94560);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #8892b0;
+    font-size: 0.9em;
+    margin-bottom: 25px;
+  }
+
+  /* Прогресс */
+  .progress-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 25px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .progress-step {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.85em;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.15);
+    color: #8892b0;
+    transition: all 0.3s;
+  }
+
+  .progress-step.active {
+    background: #e94560;
+    border-color: #e94560;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(233,69,96,0.5);
+  }
+
+  .progress-step.done {
+    background: #2ecc71;
+    border-color: #2ecc71;
+    color: #fff;
+  }
+
+  .progress-step.current {
+    background: #f5a623;
+    border-color: #f5a623;
+    color: #1a1a2e;
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(245,166,35,0.5);
+  }
+
+  /* Секции */
+  .section {
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .section.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .task-title {
+    font-size: 1.2em;
+    margin-bottom: 15px;
+    color: #f5a623;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .task-title .num {
+    background: #f5a623;
+    color: #1a1a2e;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9em;
+    flex-shrink: 0;
+  }
+
+  .instruction {
+    color: #a0aec0;
+    font-size: 0.92em;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  /* Задание 1: выбор типа */
+  .sentence-card {
+    background: rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 25px;
+    text-align: center;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .hanzi {
+    font-size: 2em;
+    font-family: 'PingFang SC', 'Microsoft YaHei', serif;
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+  }
+
+  .options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .option-btn {
+    padding: 18px 10px;
+    border-radius: 14px;
+    border: 2px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    color: #e8e8e8;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    line-height: 1.4;
+  }
+
+  .option-btn .cn {
+    display: block;
+    font-size: 1.15em;
+    font-family: 'PingFang SC', 'Microsoft YaHei', serif;
+    margin-bottom: 3px;
+  }
+
+  .option-btn .ru {
+    display: block;
+    font-size: 0.75em;
+    color: #8892b0;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    border-color: #f5a623;
+    background: rgba(245,166,35,0.12);
+    transform: translateY(-2px);
+  }
+
+  .option-btn:disabled { cursor: default; opacity: 0.7; }
+
+  .option-btn.correct {
+    background: rgba(46,204,113,0.25);
+    border-color: #2ecc71;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(46,204,113,0.3);
+    opacity: 1;
+  }
+
+  .option-btn.wrong {
+    background: rgba(233,69,96,0.25);
+    border-color: #e94560;
+    color: #fff;
+    animation: shake 0.4s;
+    opacity: 1;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  /* Задание 2: порядок слов */
+  .word-bank {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 25px;
+    min-height: 60px;
+    padding: 15px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 14px;
+    border: 2px dashed rgba(255,255,255,0.15);
+  }
+
+  .word-chip {
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0f3460, #16213e);
+    border: 1px solid rgba(255,255,255,0.2);
+    cursor: pointer;
+    font-size: 1.2em;
+    font-family: 'PingFang SC', 'Microsoft YaHei', serif;
+    transition: all 0.2s;
+    user-select: none;
+    color: #fff;
+  }
+
+  .word-chip:hover {
+    border-color: #f5a623;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(245,166,35,0.3);
+  }
+
+  .answer-slots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    min-height: 60px;
+    padding: 15px;
+    background: rgba(245,166,35,0.05);
+    border-radius: 14px;
+    border: 2px solid rgba(245,166,35,0.3);
+    margin-bottom: 20px;
+  }
+
+  .answer-slot {
+    min-width: 60px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+    font-family: 'PingFang SC', 'Microsoft YaHei', serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0 12px;
+    border: 2px solid transparent;
+  }
+
+  .answer-slot.filled {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: #fff;
+    border-color: #2ecc71;
+  }
+
+  .answer-slot.filled:hover { background: #e94560; border-color: #e94560; }
+
+  .answer-slot.empty {
+    background: rgba(255,255,255,0.03);
+    border: 2px dashed rgba(255,255,255,0.15);
+  }
+
+  .empty-hint {
+    color: #4a5568;
+    font-size: 0.85em;
+    font-style: italic;
+  }
+
+  /* Задание 3: конструктор предложения */
+  .builder-area {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    margin-bottom: 20px;
+  }
+
+  .builder-input {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .builder-input label {
+    font-size: 0.85em;
+    color: #8892b0;
+  }
+
+  .builder-input input {
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 2px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+    font-size: 1.1em;
+    font-family: 'PingFang SC', 'Microsoft YaHei', serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .builder-input input:focus { border-color: #f5a623; }
+  .builder-input input::placeholder { color: #4a5568; font-family: 'Segoe UI', sans-serif; }
+
+  .type-selector {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .type-chip {
+    padding: 10px 18px;
+    border-radius: 12px;
+    border: 2px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    color: #e8e8e8;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9em;
+    transition: all 0.2s;
+  }
+
+  .type-chip:hover { border-color: #f5a623; }
+
+  .type-chip.selected {
+    background: #f5a623;
+    border-color: #f5a623;
+    color: #1a1a2e;
+    font-weight: 600;
+  }
+
+  .builder-feedback {
+    margin-top: 10px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    font-size: 0.92em;
+    line-height: 1.5;
+  }
+
+  .builder-feedback.ok { background: rgba(46,204,113,0.15); border: 1px solid #2ecc71; color: #2ecc71; }
+  .builder-feedback.err { background: rgba(233,69,96,0.15); border: 1px solid #e94560; color: #ff8a9b; }
+
+  /* Общие кнопки */
+  .btn {
+    padding: 14px 32px;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    font-family: inherit;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #e94560, #c73650);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(233,69,96,0.4);
+  }
+
+  .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(233,69,96,0.6); }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.08);
+    color: #e8e8e8;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .btn-secondary:hover:not(:disabled) { background: rgba(255,255,255,0.15); }
+
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 25px;
+    flex-wrap: wrap;
+  }
+
+  .result-msg {
+    text-align: center;
+    padding: 15px;
+    border-radius: 14px;
+    margin-top: 15px;
+    font-weight: 600;
+    animation: fadeIn 0.4s;
+  }
+
+  .result-msg.ok { background: rgba(46,204,113,0.15); border: 1px solid #2ecc71; color: #2ecc71; }
+  .result-msg.err { background: rgba(233,69,96,0.15); border: 1px solid #e94560; color: #ff8a9b; }
+
+  /* Финальный экран */
+  .final-screen {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .final-score {
+    font-size: 4em;
+    font-weight: bold;
+    background: linear-gradient(90deg, #f5a623, #e94560);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 15px 0;
+  }
+
+  .final-emoji { font-size: 3em; margin-bottom: 10px; }
+
+  @media (max-width: 600px) {
+    .game-container { padding: 18px; }
+    .hanzi { font-size: 1.5em; }
+    .options { grid-template-columns: 1fr; }
+    .option-btn { padding: 14px 10px; }
+    h1 { font-size: 1.2em; }
+    .progress-step { width: 34px; height: 34px; font-size: 0.75em; }
+  }
+</style>
+</head>
+<body>
+
+<div class="game-container">
+  <h1>🏆 Типы сказуемого в китайском языке</h1>
+  <p class="subtitle">Интерактивная игра для закрепления · 2 курс</p>
+
+  <!-- Прогресс -->
+  <div class="progress-bar">
+    <div class="progress-step current" data-step="1">1</div>
+    <div class="progress-step" data-step="2">2</div>
+    <div class="progress-step" data-step="3">3</div>
+    <div class="progress-step" data-step="4">🏁</div>
+  </div>
+
+  <!-- ===== ЗАДАНИЕ 1: Определи тип сказуемого ===== -->
+  <section class="section active" id="section1">
+    <div class="task-title"><span class="num">1</span> Определи тип сказуемого</div>
+    <p class="instruction">Прочитай предложение и выбери, какое в нём сказуемое. <strong>6 заданий.</strong> Счёт: <span id="score1">0</span> / 6</p>
+
+    <div class="sentence-card">
+      <div class="hanzi" id="q1-hanzi"></div>
+    </div>
+
+    <div class="options" id="q1-options"></div>
+    <div class="result-msg" id="q1-result" style="display:none;"></div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="q1-next" disabled>Следующее →</button>
+    </div>
+  </section>
+
+  <!-- ===== ЗАДАНИЕ 2: Поставь слова в правильном порядке ===== -->
+  <section class="section" id="section2">
+    <div class="task-title"><span class="num">2</span> Поставь слова в правильном порядке</div>
+    <p class="instruction">Нажимай на слова, чтобы построить предложение. Нажми на слово в ответе, чтобы вернуть его обратно. <strong>4 задания.</strong> Счёт: <span id="score2">0</span> / 4</p>
+
+    <div class="sentence-card" style="padding: 15px;">
+      <div id="q2-hint" style="font-size: 1em; color: #f5a623;"></div>
+    </div>
+
+    <div class="answer-slots" id="q2-slots">
+      <span class="empty-hint">Нажимай на слова ниже, чтобы строить предложение →</span>
+    </div>
+    <div class="word-bank" id="q2-bank"></div>
+
+    <div class="result-msg" id="q2-result" style="display:none;"></div>
+
+    <div class="actions">
+      <button class="btn btn-secondary" id="q2-reset">🔄 Сбросить</button>
+      <button class="btn btn-primary" id="q2-check">Проверить ✓</button>
+      <button class="btn btn-primary" id="q2-next" style="display:none;" disabled>Следующее →</button>
+    </div>
+  </section>
+
+  <!-- ===== ЗАДАНИЕ 3: Конструктор ===== -->
+  <section class="section" id="section3">
+    <div class="task-title"><span class="num">3</span> Собери предложение сам</div>
+    <p class="instruction">Придумай и напиши предложение на китайском языке по заданию. Затем выбери тип сказуемого. <strong>4 задания.</strong> Счёт: <span id="score3">0</span> / 4</p>
+
+    <div class="sentence-card" style="padding: 18px;">
+      <div id="q3-task" style="font-size: 1.05em; color: #f5a623; line-height: 1.6;"></div>
+    </div>
+
+    <div class="builder-area">
+      <div class="builder-input">
+        <label>Твоё предложение (иероглифы):</label>
+        <input type="text" id="q3-input" placeholder="Напиши предложение..." autocomplete="off">
+      </div>
+      <div class="builder-input">
+        <label>Тип сказуемого:</label>
+        <div class="type-selector" id="q3-types">
+          <button class="type-chip" data-type="adj">形容词谓语<br><small>качественное</small></button>
+          <button class="type-chip" data-type="noun">名词谓语<br><small>именное</small></button>
+          <button class="type-chip" data-type="verb">动词谓语<br><small>глагольное</small></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="builder-feedback" id="q3-feedback" style="display:none;"></div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="q3-check">Проверить ✓</button>
+      <button class="btn btn-primary" id="q3-next" style="display:none;" disabled>Следующее →</button>
+    </div>
+  </section>
+
+  <!-- ===== ФИНАЛЬНЫЙ ЭКРАН ===== -->
+  <section class="section" id="section4">
+    <div class="final-screen">
+      <div class="final-emoji" id="final-emoji">🎉</div>
+      <h2 style="font-size: 1.5em; margin-bottom: 5px;">Игра завершена!</h2>
+      <div class="final-score" id="final-score">0 / 14</div>
+      <p style="color: #a0aec0; margin-bottom: 25px;" id="final-msg"></p>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="location.reload()">🔄 Играть снова</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+// ============================================
+// ЗАДАНИЕ 1: Определи тип сказуемого
+// ============================================
+const task1 = [
+  { hanzi: '我哥哥很高。', correct: 'adj' },
+  { hanzi: '她是医生。', correct: 'noun' },
+  { hanzi: '我们看电视。', correct: 'verb' },
+  { hanzi: '这个苹果很好吃。', correct: 'adj' },
+  { hanzi: '他是我的好朋友。', correct: 'noun' },
+  { hanzi: '他们打篮球。', correct: 'verb' }
+];
+
+const typeLabels = {
+  adj: { cn: '形容词谓语', ru: 'качественное' },
+  noun: { cn: '名词谓语', ru: 'именное' },
+  verb: { cn: '动词谓语', ru: 'глагольное' }
+};
+
+let q1Index = 0;
+let q1Score = 0;
+let q1Answered = false;
+
+function renderQ1() {
+  const q = task1[q1Index];
+  document.getElementById('q1-hanzi').textContent = q.hanzi;
+
+  const opts = document.getElementById('q1-options');
+  opts.innerHTML = '';
+  const keys = ['adj', 'noun', 'verb'];
+  keys.forEach(key => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="cn">${typeLabels[key].cn}</span><span class="ru">${typeLabels[key].ru}</span>`;
+    btn.dataset.type = key;
+    btn.onclick = () => selectQ1(btn, key, q.correct);
+    opts.appendChild(btn);
+  });
+
+  document.getElementById('q1-result').style.display = 'none';
+  document.getElementById('q1-next').disabled = true;
+  q1Answered = false;
+}
+
+function selectQ1(btn, chosen, correct) {
+  if (q1Answered) return;
+  q1Answered = true;
+
+  document.querySelectorAll('#q1-options .option-btn').forEach(b => b.disabled = true);
+  const resultEl = document.getElementById('q1-result');
+
+  if (chosen === correct) {
+    btn.classList.add('correct');
+    q1Score++;
+    document.getElementById('score1').textContent = q1Score;
+    resultEl.className = 'result-msg ok';
+    resultEl.textContent = '✅ Правильно! Это ' + typeLabels[correct].cn + ' (' + typeLabels[correct].ru + ').';
+  } else {
+    btn.classList.add('wrong');
+    const correctBtn = document.querySelector(`#q1-options .option-btn[data-type="${correct}"]`);
+    correctBtn.classList.add('correct');
+    resultEl.className = 'result-msg err';
+    resultEl.textContent = '❌ Неверно. Правильный ответ: ' + typeLabels[correct].cn + ' (' + typeLabels[correct].ru + ').';
+  }
+  resultEl.style.display = 'block';
+  const nextBtn = document.getElementById('q1-next');
+  nextBtn.textContent = q1Index < task1.length - 1 ? 'Следующее →' : 'К заданию 2 →';
+  nextBtn.disabled = false;
+}
+
+document.getElementById('q1-next').onclick = () => {
+  q1Index++;
+  if (q1Index < task1.length) {
+    renderQ1();
+  } else {
+    goToSection(2);
+  }
+};
+
+// ============================================
+// ЗАДАНИЕ 2: Порядок слов
+// ============================================
+const task2 = [
+  {
+    hint: 'Мой младший брат — студент.',
+    words: ['是', '我', '学生', '弟弟', '的'],
+    answer: ['我', '的', '弟弟', '是', '学生']
+  },
+  {
+    hint: 'Сегодня очень жарко.',
+    words: ['很', '今天', '热'],
+    answer: ['今天', '很', '热']
+  },
+  {
+    hint: 'Мы изучаем китайский язык.',
+    words: ['汉语', '我们', '学习'],
+    answer: ['我们', '学习', '汉语']
+  },
+  {
+    hint: 'Моя мама очень красивая.',
+    words: ['漂亮', '我', '很', '妈妈', '的'],
+    answer: ['我', '的', '妈妈', '很', '漂亮']
+  }
+];
+
+let q2Index = 0;
+let q2Score = 0;
+let q2CurrentAnswer = [];
+let q2BankWords = [];
+
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function renderQ2() {
+  const q = task2[q2Index];
+  q2CurrentAnswer = [];
+  document.getElementById('q2-hint').textContent = '🔤 ' + q.hint;
+
+  const indices = q.words.map((_, i) => i);
+  const shuffled = shuffleArray(indices);
+  q2BankWords = shuffled.map(i => ({ word: q.words[i] }));
+
+  renderQ2Slots();
+  renderQ2Bank();
+
+  document.getElementById('q2-result').style.display = 'none';
+  document.getElementById('q2-check').style.display = 'inline-flex';
+  document.getElementById('q2-check').disabled = false;
+
+  const nextBtn = document.getElementById('q2-next');
+  nextBtn.style.display = 'none';
+  nextBtn.disabled = true;
+}
+
+function renderQ2Slots() {
+  const slots = document.getElementById('q2-slots');
+  slots.innerHTML = '';
+  if (q2CurrentAnswer.length === 0) {
+    slots.innerHTML = '<span class="empty-hint">Нажимай на слова ниже, чтобы строить предложение →</span>';
+    return;
+  }
+  q2CurrentAnswer.forEach((item, pos) => {
+    const slot = document.createElement('div');
+    slot.className = 'answer-slot filled';
+    slot.textContent = item.word;
+    slot.title = 'Нажми, чтобы вернуть';
+    slot.onclick = () => {
+      q2CurrentAnswer.splice(pos, 1);
+      q2BankWords.push(item);
+      renderQ2Slots();
+      renderQ2Bank();
+      document.getElementById('q2-result').style.display = 'none';
+    };
+    slots.appendChild(slot);
+  });
+}
+
+function renderQ2Bank() {
+  const bank = document.getElementById('q2-bank');
+  bank.innerHTML = '';
+  q2BankWords.forEach((item, pos) => {
+    const chip = document.createElement('div');
+    chip.className = 'word-chip';
+    chip.textContent = item.word;
+    chip.onclick = () => {
+      q2CurrentAnswer.push(item);
+      q2BankWords.splice(pos, 1);
+      renderQ2Slots();
+      renderQ2Bank();
+      document.getElementById('q2-result').style.display = 'none';
+    };
+    bank.appendChild(chip);
+  });
+  if (q2BankWords.length === 0) {
+    bank.innerHTML = '<span class="empty-hint" style="color:#4a5568;">Все слова использованы</span>';
+  }
+}
+
+document.getElementById('q2-reset').onclick = () => {
+  q2CurrentAnswer.forEach(item => q2BankWords.push(item));
+  q2CurrentAnswer = [];
+  renderQ2Slots();
+  renderQ2Bank();
+  document.getElementById('q2-result').style.display = 'none';
+};
+
+document.getElementById('q2-check').onclick = () => {
+  const q = task2[q2Index];
+  const resultEl = document.getElementById('q2-result');
+  const userAnswer = q2CurrentAnswer.map(x => x.word);
+
+  if (userAnswer.length !== q.answer.length) {
+    resultEl.className = 'result-msg err';
+    resultEl.textContent = '⚠️ Использованы не все слова. Проверь предложение.';
+    resultEl.style.display = 'block';
+    return;
+  }
+
+  const isCorrect = userAnswer.every((w, i) => w === q.answer[i]);
+  if (isCorrect) {
+    q2Score++;
+    document.getElementById('score2').textContent = q2Score;
+    resultEl.className = 'result-msg ok';
+    resultEl.textContent = '✅ Отлично! Предложение построено верно.';
+    document.getElementById('q2-check').style.display = 'none';
+
+    const nextBtn = document.getElementById('q2-next');
+    nextBtn.style.display = 'inline-flex';
+    nextBtn.disabled = false;
+    nextBtn.textContent = q2Index < task2.length - 1 ? 'Следующее →' : 'К заданию 3 →';
+  } else {
+    resultEl.className = 'result-msg err';
+    resultEl.textContent = '❌ Пока неверно. Попробуй ещё раз: подсказка — «' + q.hint + '»';
+    resultEl.style.display = 'block';
+  }
+};
+
+document.getElementById('q2-next').onclick = () => {
+  q2Index++;
+  if (q2Index < task2.length) {
+    renderQ2();
+  } else {
+    goToSection(3);
+  }
+};
+
+// ============================================
+// ЗАДАНИЕ 3: Конструктор
+// ============================================
+const task3 = [
+  {
+    task: 'Составь предложение с <strong>именным сказуемым</strong> (名词谓语).<br><small>Подсказка: используй 是 (shì). Расскажи, кем является человек.</small>',
+    type: 'noun',
+    keywords: ['是'],
+    example: '他是老师。'
+  },
+  {
+    task: 'Составь предложение с <strong>качественным сказуемым</strong> (形容词谓语).<br><small>Подсказка: используй прилагательное + 很 (hěn). Опиши человека или предмет.</small>',
+    type: 'adj',
+    keywords: ['很'],
+    example: '她很漂亮。'
+  },
+  {
+    task: 'Составь предложение с <strong>глагольным сказуемым</strong> (动词谓语).<br><small>Подсказка: используй глагол действия.</small>',
+    type: 'verb',
+    keywords: [],
+    example: '我们学习汉语。'
+  },
+  {
+    task: 'Составь предложение с <strong>качественным сказуемым</strong> (形容词谓语) о погоде или еде.<br><small>Подсказка: используй 很 (hěn) + прилагательное.</small>',
+    type: 'adj',
+    keywords: ['很'],
+    example: '今天很冷。'
+  }
+];
+
+let q3Index = 0;
+let q3Score = 0;
+let q3SelectedType = null;
+let q3Checked = false;
+
+function renderQ3() {
+  const q = task3[q3Index];
+  document.getElementById('q3-task').innerHTML = q.task;
+  document.getElementById('q3-input').value = '';
+  q3SelectedType = null;
+  q3Checked = false;
+
+  document.querySelectorAll('#q3-types .type-chip').forEach(ch => ch.classList.remove('selected'));
+  document.getElementById('q3-feedback').style.display = 'none';
+  document.getElementById('q3-check').style.display = 'inline-flex';
+  document.getElementById('q3-check').disabled = false;
+
+  const nextBtn = document.getElementById('q3-next');
+  nextBtn.style.display = 'none';
+  nextBtn.disabled = true;
+}
+
+document.querySelectorAll('#q3-types .type-chip').forEach(chip => {
+  chip.onclick = () => {
+    if (q3Checked) return;
+    document.querySelectorAll('#q3-types .type-chip').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+    q3SelectedType = chip.dataset.type;
+  };
+});
+
+document.getElementById('q3-check').onclick = () => {
+  const q = task3[q3Index];
+  const input = document.getElementById('q3-input').value.trim();
+  const feedback = document.getElementById('q3-feedback');
+  q3Checked = true;
+
+  let errors = [];
+
+  if (!input) errors.push('Напиши предложение на китайском языке.');
+  if (!q3SelectedType) errors.push('Выбери тип сказуемого.');
+
+  if (q3SelectedType && q3SelectedType !== q.type) {
+    errors.push('Тип сказуемого выбран неверно. В этом задании нужно: ' + typeLabels[q.type].cn + '.');
+  }
+
+  if (input) {
+    q.keywords.forEach(kw => {
+      if (!input.includes(kw)) {
+        errors.push('В предложении должно быть слово «' + kw + '».');
+      }
+    });
+    if (!/[\u4e00-\u9fff]/.test(input)) {
+      errors.push('Напиши предложение иероглифами.');
+    }
+  }
+
+  if (errors.length === 0) {
+    q3Score++;
+    document.getElementById('score3').textContent = q3Score;
+    feedback.className = 'builder-feedback ok';
+    feedback.innerHTML = '✅ Принято! Пример: ' + q.example + '<br><small>Твой вариант тоже верный, если он построен по схеме.</small>';
+    document.getElementById('q3-check').style.display = 'none';
+
+    const nextBtn = document.getElementById('q3-next');
+    nextBtn.style.display = 'inline-flex';
+    nextBtn.disabled = false;
+    nextBtn.textContent = q3Index < task3.length - 1 ? 'Следующее →' : 'К результатам →';
+  } else {
+    feedback.className = 'builder-feedback err';
+    feedback.innerHTML = '❌ ' + errors.join('<br>');
+    q3Checked = false;
+  }
+  feedback.style.display = 'block';
+};
+
+document.getElementById('q3-next').onclick = () => {
+  q3Index++;
+  if (q3Index < task3.length) {
+    renderQ3();
+  } else {
+    showFinal();
+  }
+};
+
+// ============================================
+// НАВИГАЦИЯ
+// ============================================
+function updateProgress(activeStep) {
+  document.querySelectorAll('.progress-step').forEach(step => {
+    const n = parseInt(step.dataset.step);
+    step.classList.remove('active', 'done', 'current');
+    if (n < activeStep) step.classList.add('done');
+    else if (n === activeStep) step.classList.add('current');
+    else step.classList.add('active');
+    if (activeStep === 4 && n === 4) {
+      step.classList.remove('active');
+      step.classList.add('current');
+    }
+  });
+}
+
+function goToSection(n) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('section' + n).classList.add('active');
+  updateProgress(n);
+
+  if (n === 2 && !document.getElementById('q2-bank').hasChildNodes()) renderQ2();
+  if (n === 3 && !document.getElementById('q3-task').textContent) renderQ3();
+  if (n === 4) showFinal();
+}
+
+function showFinal() {
+  const total = q1Score + q2Score + q3Score;
+  const max = task1.length + task2.length + task3.length;
+  document.getElementById('final-score').textContent = total + ' / ' + max;
+
+  const pct = total / max;
+  let emoji, msg;
+  if (pct === 1) { emoji = '🏆'; msg = 'Идеально! Ты отлично разбираешься в типах сказуемого!'; }
+  else if (pct >= 0.8) { emoji = '🎉'; msg = 'Отличный результат! Почти всё верно.'; }
+  else if (pct >= 0.6) { emoji = '👍'; msg = 'Хорошо! Есть над чем поработать, но база усвоена.'; }
+  else if (pct >= 0.4) { emoji = '💪'; msg = 'Неплохо, но стоит повторить схемы трёх типов сказуемого.'; }
+  else { emoji = '📚'; msg = 'Не расстраивайся! Повтори правило и попробуй снова.'; }
+
+  document.getElementById('final-emoji').textContent = emoji;
+  document.getElementById('final-msg').textContent = msg;
+
+  goToSection(4);
+  updateProgress(4);
+}
+
+// ============================================
+// СТАРТ
+// ============================================
+renderQ1();
+updateProgress(1);
+</script>
+
+</body>
+</html>
